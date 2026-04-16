@@ -3,8 +3,8 @@
  * Handles communication with the FastAPI backend.
  */
 
-const API_BASE_URL = "http://localhost:8000/api/v1";
-const API_KEY = "fortress-secret";
+const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:8000/api/v1";
+const API_KEY = import.meta.env.VITE_API_KEY || "fortress-secret";
 
 export interface TransactionData {
   user_id: string;

@@ -9,7 +9,6 @@ class Settings(BaseSettings):
     
     # DATABASE
     SQLITE_URL: str = "sqlite+aiosqlite:///./fortressx.db"
-    POSTGRES_URL: str = "postgresql+asyncpg://user:pass@localhost/fortressx"
     DATABASE_URL: str = SQLITE_URL
     
     # SECURITY
