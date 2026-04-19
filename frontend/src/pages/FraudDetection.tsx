@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { predictFraud, PredictionResponse, TransactionData } from '../services/api';
+import { predictFraud, type PredictionResponse, type TransactionData } from '../services/api';
 
 const FraudDetection: React.FC = () => {
   const [formData, setFormData] = useState<TransactionData>({
