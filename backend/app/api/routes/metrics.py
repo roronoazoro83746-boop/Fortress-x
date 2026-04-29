@@ -40,3 +40,18 @@ async def get_metrics(db: AsyncSession = Depends(get_db)):
             {"name": "Critical Risk", "value": 1.7, "color": "#ef4444"},
         ]
     }
+
+@router.get("/public")
+async def get_public_metrics(db: AsyncSession = Depends(get_db)):
+    """
+    Retrieves public metrics for the landing page (no auth required).
+    """
+    logger.info("get_public_metrics_requested")
+    metrics = await crud.get_public_metrics(db)
+    
+    return {
+        "transactionsAnalyzed": metrics["transactions_analyzed"],
+        "activeUsers": metrics["active_users"],
+        "threatsBlocked": metrics["threats_blocked"],
+        "avgRiskScore": round(metrics["avg_risk_score"] * 100, 2),
+    }

@@ -1,8 +1,28 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import { getPublicMetrics } from '../services/api';
 import { Shield, Play, Brain, Users, Globe, Zap, Lock } from 'lucide-react';
 
 const Landing: React.FC = () => {
+  const [metrics, setMetrics] = useState({
+    activeUsers: 0,
+    transactionsAnalyzed: 0,
+    threatsBlocked: 0,
+    avgRiskScore: 0
+  });
+
+  useEffect(() => {
+    const fetchMetrics = async () => {
+      try {
+        const data = await getPublicMetrics();
+        setMetrics(data);
+      } catch (error) {
+        console.error("Failed to load public metrics", error);
+      }
+    };
+    fetchMetrics();
+  }, []);
+
   return (
     <div className="min-h-screen bg-[#070514] text-white overflow-hidden relative font-sans">
       {/* Background Glows */}
@@ -109,7 +129,7 @@ const Landing: React.FC = () => {
              <Users className="w-8 h-8 text-purple-400" />
           </div>
           <div>
-            <h3 className="text-3xl font-bold text-purple-400 mb-1">10K+</h3>
+            <h3 className="text-3xl font-bold text-purple-400 mb-1">{metrics.activeUsers}</h3>
             <p className="text-sm text-gray-400 font-medium">Active Users</p>
           </div>
         </div>
@@ -121,7 +141,7 @@ const Landing: React.FC = () => {
              <Lock className="w-8 h-8 text-green-400" />
           </div>
           <div>
-            <h3 className="text-3xl font-bold text-green-400 mb-1">1M+</h3>
+            <h3 className="text-3xl font-bold text-green-400 mb-1">{metrics.transactionsAnalyzed.toLocaleString()}</h3>
             <p className="text-sm text-gray-400 font-medium">Transactions Analyzed</p>
           </div>
         </div>
@@ -133,8 +153,8 @@ const Landing: React.FC = () => {
              <Shield className="w-8 h-8 text-blue-400" />
           </div>
           <div>
-            <h3 className="text-3xl font-bold text-blue-400 mb-1">96%</h3>
-            <p className="text-sm text-gray-400 font-medium">Detection Accuracy</p>
+            <h3 className="text-3xl font-bold text-blue-400 mb-1">{metrics.threatsBlocked.toLocaleString()}</h3>
+            <p className="text-sm text-gray-400 font-medium">Threats Blocked</p>
           </div>
         </div>
 
@@ -145,8 +165,8 @@ const Landing: React.FC = () => {
              <Zap className="w-8 h-8 text-orange-400" />
           </div>
           <div>
-            <h3 className="text-3xl font-bold text-orange-400 mb-1">&lt; 1s</h3>
-            <p className="text-sm text-gray-400 font-medium">Real-time Detection</p>
+            <h3 className="text-3xl font-bold text-orange-400 mb-1">{metrics.avgRiskScore}%</h3>
+            <p className="text-sm text-gray-400 font-medium">Avg Risk Score</p>
           </div>
         </div>
       </div>

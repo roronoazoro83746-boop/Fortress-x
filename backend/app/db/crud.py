@@ -57,6 +57,19 @@ async def get_dashboard_metrics(db: AsyncSession):
         "avg_risk_score": avg_risk,
     }
 
+async def get_public_metrics(db: AsyncSession):
+    total_tx = await db.scalar(select(func.count(models.Transaction.id))) or 0
+    active_users = await db.scalar(select(func.count(func.distinct(models.Transaction.user_id)))) or 0
+    threats_blocked = await db.scalar(select(func.count(models.Score.id)).where(models.Score.decision == models.Decision.BLOCK)) or 0
+    avg_risk = await db.scalar(select(func.avg(models.Score.final_score))) or 0.0
+
+    return {
+        "transactions_analyzed": total_tx,
+        "active_users": active_users,
+        "threats_blocked": threats_blocked,
+        "avg_risk_score": avg_risk,
+    }
+
 async def init_db():
     from app.db.session import engine, Base
     async with engine.begin() as conn:
