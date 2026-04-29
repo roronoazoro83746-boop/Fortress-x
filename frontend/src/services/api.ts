@@ -46,21 +46,44 @@ export async function predictFraud(data: TransactionData): Promise<PredictionRes
   return response.json();
 }
 
-/**
- * Fetch simulated metrics for the dashboard
- */
 export async function getDashboardMetrics() {
-  // In a real app, this would be an endpoint like /api/v1/metrics
-  return {
-    totalScans: 1284592,
-    fraudBlocked: 42103,
-    avgRiskScore: 14.2,
-    activeAlerts: 8,
-    riskTrend: [30, 45, 60, 25, 40, 55, 70],
-    topRiskyIPs: [
-      { ip: "192.168.1.45", severity: "CRITICAL" },
-      { ip: "203.0.113.88", severity: "REVIEW" },
-      { ip: "185.22.41.90", severity: "HIGH" },
-    ]
-  };
+  const response = await fetch(`${API_BASE_URL}/metrics/`, {
+    headers: {
+      "x-api-key": API_KEY,
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error("Failed to fetch dashboard metrics");
+  }
+
+  return response.json();
+}
+
+export async function getAlerts(skip = 0, limit = 100) {
+  const response = await fetch(`${API_BASE_URL}/alerts/?skip=${skip}&limit=${limit}`, {
+    headers: {
+      "x-api-key": API_KEY,
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error("Failed to fetch alerts");
+  }
+
+  return response.json();
+}
+
+export async function getAlertDetails(id: string) {
+  const response = await fetch(`${API_BASE_URL}/alerts/${id}`, {
+    headers: {
+      "x-api-key": API_KEY,
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error("Failed to fetch alert details");
+  }
+
+  return response.json();
 }

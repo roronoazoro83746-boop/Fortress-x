@@ -1,105 +1,224 @@
-import React from 'react';
-
-interface MetricCardProps {
-  label: string;
-  value: string;
-  trend?: string;
-  isPositive?: boolean;
-}
-
-const MetricCard: React.FC<MetricCardProps> = ({ label, value, trend, isPositive }) => (
-  <div className="bg-[#151921] border border-white/5 p-6 rounded-2xl animate-in fade-in slide-in-from-bottom-5">
-    <p className="text-gray-400 text-sm mb-2">{label}</p>
-    <p className="text-3xl font-bold font-heading text-white">{value}</p>
-    {trend && (
-      <div className={`mt-4 text-xs font-mono font-medium ${isPositive ? 'text-green-400' : 'text-red-400'}`}>
-        {isPositive ? '↑' : '↓'} {trend} vs last week
-      </div>
-    )}
-  </div>
-);
+import React, { useEffect, useState } from 'react';
+import { 
+  LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
+  PieChart, Pie, Cell
+} from 'recharts';
+import { Bell, ChevronDown } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { getDashboardMetrics, getAlerts } from '../services/api';
 
 const Dashboard: React.FC = () => {
-  const trendData = [30, 45, 60, 25, 40, 55, 70, 85, 40, 30, 60, 50];
-  
+  const [metrics, setMetrics] = useState<any>(null);
+  const [alerts, setAlerts] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const metricsData = await getDashboardMetrics();
+        setMetrics(metricsData);
+        
+        const alertsData = await getAlerts(0, 5); // get top 5 recent alerts
+        setAlerts(alertsData);
+      } catch (error) {
+        console.error("Failed to load dashboard data", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchData();
+  }, []);
+
+  if (loading || !metrics) {
+    return <div className="p-8 text-white">Loading dashboard...</div>;
+  }
+
+  const { totalScans, fraudBlocked, avgRiskScore, activeAlerts, riskTrend, riskDistribution } = metrics;
+
   return (
-    <div className="p-8 max-w-7xl mx-auto min-h-screen bg-[#0e0e0e]">
-      <header className="flex flex-col md:flex-row md:justify-between md:items-center mb-10 gap-4">
-        <div>
-          <h2 className="text-3xl font-bold font-heading text-white tracking-tight">Security Overview</h2>
-          <p className="text-gray-500 mt-1">Real-time threat monitoring and fraud analysis feed.</p>
-        </div>
-        <div className="flex gap-4">
-          <div className="px-5 py-2.5 bg-green-500/10 border border-green-500/20 rounded-full text-xs font-bold text-green-400 flex items-center gap-2">
-            <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span> SYSTEM OPTIMAL
+    <div className="p-8 max-w-[1600px] mx-auto min-h-screen bg-[#070514] text-white font-sans">
+      
+      {/* Top Header */}
+      <header className="flex justify-between items-center mb-8">
+        <h2 className="text-2xl font-bold flex items-center gap-2">
+          <span className="w-1 h-6 bg-purple-500 rounded-full"></span>
+          Dashboard
+        </h2>
+        
+        <div className="flex items-center gap-6">
+          <div className="text-sm text-gray-400 bg-[#110e1f] px-4 py-2 rounded-xl border border-white/5 flex items-center gap-2">
+            Live Monitoring <ChevronDown className="w-4 h-4" />
           </div>
-          <div className="px-5 py-2.5 bg-cyan-500/10 border border-cyan-500/20 rounded-full text-xs font-mono text-cyan-400">
-            API: <span className="text-white">OPERATIONAL</span>
+          <div className="relative cursor-pointer">
+            <Bell className="w-5 h-5 text-gray-400 hover:text-white transition-colors" />
+            {activeAlerts > 0 && <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-[#070514]"></span>}
           </div>
+          <div className="w-8 h-8 rounded-full bg-gradient-to-r from-purple-500 to-blue-500 cursor-pointer"></div>
         </div>
       </header>
 
-      {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
-        <MetricCard label="Total Transactions" value="1,284,592" trend="12.5%" isPositive={true} />
-        <MetricCard label="Fraud Intercepted" value="42,103" trend="4.2%" isPositive={false} />
-        <MetricCard label="Avg Risk Score" value="14.2%" trend="2.1%" isPositive={true} />
-        <MetricCard label="System Uptime" value="99.99%" />
+      {/* Stats Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <div className="bg-[#110e1f] border border-white/5 p-6 rounded-2xl">
+          <p className="text-gray-400 text-sm mb-2">Total Transactions</p>
+          <p className="text-3xl font-bold mb-3">{totalScans.toLocaleString()}</p>
+          <p className="text-xs font-medium text-green-400">Live DB Count</p>
+        </div>
+        <div className="bg-[#110e1f] border border-white/5 p-6 rounded-2xl">
+          <p className="text-gray-400 text-sm mb-2">Fraud Detected</p>
+          <p className="text-3xl font-bold mb-3">{fraudBlocked.toLocaleString()}</p>
+          <p className="text-xs font-medium text-red-400">Live DB Count</p>
+        </div>
+        <div className="bg-[#110e1f] border border-white/5 p-6 rounded-2xl">
+          <p className="text-gray-400 text-sm mb-2">Avg Risk Score</p>
+          <p className="text-3xl font-bold mb-3">{avgRiskScore}%</p>
+          <p className="text-xs font-medium text-blue-400">System Wide</p>
+        </div>
+        <div className="bg-[#110e1f] border border-white/5 p-6 rounded-2xl">
+          <p className="text-gray-400 text-sm mb-2">System Status</p>
+          <p className="text-3xl font-bold mb-3 text-green-400">OPTIMAL</p>
+          <p className="text-xs font-medium text-gray-500">All Engines Online</p>
+        </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Risk Trend Chart */}
-        <div className="lg:col-span-2 bg-[#151921] border border-white/5 p-8 rounded-3xl">
-          <div className="flex justify-between items-center mb-10">
-            <h3 className="font-heading font-semibold text-xl text-white">Risk Trend</h3>
-            <span className="text-xs text-gray-500 uppercase tracking-widest font-mono">Last 24 Hours</span>
+      {/* Charts Section */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+        
+        {/* Line Chart */}
+        <div className="lg:col-span-2 bg-[#110e1f] border border-white/5 p-6 rounded-2xl">
+          <div className="flex justify-between items-center mb-6">
+            <h3 className="font-semibold text-lg">Transactions Overview</h3>
+            <div className="flex items-center gap-4">
+              <div className="flex items-center gap-4 text-xs font-medium">
+                <div className="flex items-center gap-2"><div className="w-2 h-2 rounded-full bg-purple-500"></div> Total</div>
+                <div className="flex items-center gap-2"><div className="w-2 h-2 rounded-full bg-red-500"></div> Fraudulent</div>
+              </div>
+            </div>
           </div>
           
-          <div className="h-64 flex items-end gap-3 px-2">
-            {trendData.map((val, idx) => (
-              <div key={idx} className="flex-1 flex flex-col justify-end group">
-                <div 
-                  className="w-full bg-cyan-400/20 group-hover:bg-cyan-400/40 transition-all rounded-t-lg relative"
-                  style={{ height: `${val}%` }}
-                >
-                  <div className="absolute inset-0 bg-cyan-400/5 blur-sm opacity-0 group-hover:opacity-100 transition-opacity"></div>
+          <div className="h-[300px] w-full">
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart data={riskTrend} margin={{ top: 5, right: 20, bottom: 5, left: 0 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#ffffff10" vertical={false} />
+                <XAxis dataKey="name" stroke="#6b7280" tick={{ fill: '#6b7280', fontSize: 12 }} axisLine={false} tickLine={false} dy={10} />
+                <YAxis stroke="#6b7280" tick={{ fill: '#6b7280', fontSize: 12 }} axisLine={false} tickLine={false} tickFormatter={(value) => `${value / 1000}K`} />
+                <Tooltip 
+                  contentStyle={{ backgroundColor: '#110e1f', borderColor: '#ffffff20', borderRadius: '8px' }}
+                  itemStyle={{ color: '#fff' }}
+                />
+                <Line type="monotone" dataKey="total" stroke="#a855f7" strokeWidth={3} dot={false} activeDot={{ r: 6, fill: '#a855f7', stroke: '#070514', strokeWidth: 2 }} />
+                <Line type="monotone" dataKey="fraud" stroke="#ef4444" strokeWidth={3} dot={false} activeDot={{ r: 6, fill: '#ef4444', stroke: '#070514', strokeWidth: 2 }} />
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+
+        {/* Donut Chart */}
+        <div className="bg-[#110e1f] border border-white/5 p-6 rounded-2xl flex flex-col">
+          <div className="flex justify-between items-center mb-6">
+            <h3 className="font-semibold text-lg">Risk Distribution</h3>
+          </div>
+          
+          <div className="flex-1 relative flex justify-center items-center">
+            <div className="h-[250px] w-full">
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={riskDistribution}
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={70}
+                    outerRadius={100}
+                    paddingAngle={2}
+                    dataKey="value"
+                    stroke="none"
+                  >
+                    {riskDistribution.map((entry: any, index: number) => (
+                      <Cell key={`cell-${index}`} fill={entry.color} />
+                    ))}
+                  </Pie>
+                  <Tooltip 
+                    contentStyle={{ backgroundColor: '#110e1f', borderColor: '#ffffff20', borderRadius: '8px' }}
+                    itemStyle={{ color: '#fff' }}
+                  />
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
+            
+            <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+              <span className="text-3xl font-bold">Risk</span>
+              <span className="text-xs text-gray-400">Levels</span>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-y-3 gap-x-2 mt-4 px-4">
+            {riskDistribution.map((item: any, i: number) => (
+              <div key={i} className="flex justify-between items-center text-sm">
+                <div className="flex items-center gap-2">
+                  <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: item.color }}></div>
+                  <span className="text-gray-300">{item.name}</span>
                 </div>
-                <div className="mt-2 text-[10px] text-gray-600 text-center font-mono">
-                  {idx * 2}h
-                </div>
+                <span className="font-medium text-white">{item.value}%</span>
               </div>
             ))}
           </div>
         </div>
+      </div>
 
-        {/* Top Risky IPs */}
-        <div className="bg-[#151921] border border-white/5 p-8 rounded-3xl">
-          <h3 className="font-heading font-semibold text-xl mb-8 text-white">Top Target IPs</h3>
-          <div className="space-y-4">
-            {[
-              { ip: "192.168.1.45", severity: "CRITICAL", score: "94%" },
-              { ip: "203.0.113.88", severity: "HIGH", score: "82%" },
-              { ip: "185.22.41.90", severity: "HIGH", score: "78%" },
-              { ip: "45.12.33.24", severity: "MEDIUM", score: "45%" },
-              { ip: "102.4.99.12", severity: "MEDIUM", score: "39%" },
-            ].map((item, i) => (
-              <div key={i} className="flex justify-between items-center p-4 bg-black/40 border border-white/5 rounded-2xl hover:border-cyan-400/30 transition-all cursor-pointer group">
-                <div>
-                  <p className="font-mono text-sm text-gray-300 group-hover:text-cyan-400 transition-colors">{item.ip}</p>
-                  <p className="text-[10px] text-gray-600 uppercase tracking-widest mt-1">Network Trace Active</p>
-                </div>
-                <div className="text-right">
-                  <span className={`px-2 py-1 rounded text-[10px] font-bold uppercase ${
-                    item.severity === 'CRITICAL' ? 'bg-red-500/20 text-red-500' : 
-                    item.severity === 'HIGH' ? 'bg-orange-500/20 text-orange-500' : 'bg-yellow-500/20 text-yellow-500'
-                  }`}>
-                    {item.severity}
-                  </span>
-                  <p className="text-sm font-bold text-white mt-1">{item.score}</p>
-                </div>
-              </div>
-            ))}
-          </div>
+      {/* Recent Alerts Table */}
+      <div className="bg-[#110e1f] border border-white/5 rounded-2xl overflow-hidden">
+        <div className="p-6 border-b border-white/5">
+          <h3 className="font-semibold text-lg">Recent Alerts</h3>
+        </div>
+        
+        <div className="overflow-x-auto">
+          <table className="w-full text-left text-sm text-gray-300">
+            <thead className="bg-black/30 text-gray-400 text-xs uppercase font-medium">
+              <tr>
+                <th className="px-6 py-4">ID</th>
+                <th className="px-6 py-4">Time</th>
+                <th className="px-6 py-4">Transaction ID</th>
+                <th className="px-6 py-4">Reason</th>
+                <th className="px-6 py-4">Risk Level</th>
+                <th className="px-6 py-4">Status</th>
+                <th className="px-6 py-4">Action</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-white/5">
+              {alerts.length === 0 ? (
+                <tr>
+                  <td colSpan={7} className="px-6 py-4 text-center text-gray-500">No recent alerts found.</td>
+                </tr>
+              ) : alerts.map((alert, i) => (
+                <tr key={i} className="hover:bg-white/[0.02] transition-colors">
+                  <td className="px-6 py-4 font-medium text-white">AL-{alert.id}</td>
+                  <td className="px-6 py-4 text-gray-400">{new Date(alert.created_at).toLocaleString()}</td>
+                  <td className="px-6 py-4">{alert.transaction_id}</td>
+                  <td className="px-6 py-4 truncate max-w-xs">{alert.reason}</td>
+                  <td className="px-6 py-4">
+                    <span className={`font-medium ${
+                      alert.severity === 'CRITICAL' ? 'text-red-500' : 
+                      alert.severity === 'HIGH' ? 'text-orange-500' : 
+                      alert.severity === 'MEDIUM' ? 'text-yellow-500' : 'text-green-500'
+                    }`}>
+                      {alert.severity}
+                    </span>
+                  </td>
+                  <td className="px-6 py-4">
+                    <span className={`font-medium ${
+                      alert.status === 'BLOCKED' ? 'text-red-500' : 
+                      alert.status === 'OPEN' ? 'text-yellow-500' : 'text-green-500'
+                    }`}>
+                      {alert.status}
+                    </span>
+                  </td>
+                  <td className="px-6 py-4">
+                    <Link to={`/alerts/${alert.id}`} className="text-purple-400 hover:text-purple-300 font-medium">View</Link>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
       </div>
     </div>

@@ -35,6 +35,28 @@ async def get_all_alerts(db: AsyncSession, skip: int = 0, limit: int = 100):
     )
     return result.scalars().all()
 
+from sqlalchemy.orm import selectinload
+from sqlalchemy import func
+
+async def get_alert_with_details(db: AsyncSession, alert_id: int):
+    result = await db.execute(
+        select(models.Alert)
+        .options(selectinload(models.Alert.transaction).selectinload(models.Transaction.score))
+        .where(models.Alert.id == alert_id)
+    )
+    return result.scalars().first()
+
+async def get_dashboard_metrics(db: AsyncSession):
+    total_tx = await db.scalar(select(func.count(models.Transaction.id))) or 0
+    fraud_count = await db.scalar(select(func.count(models.Score.id)).where(models.Score.decision.in_([models.Decision.BLOCK, models.Decision.REVIEW]))) or 0
+    avg_risk = await db.scalar(select(func.avg(models.Score.final_score))) or 0.0
+
+    return {
+        "total_transactions": total_tx,
+        "fraud_detected": fraud_count,
+        "avg_risk_score": avg_risk,
+    }
+
 async def init_db():
     from app.db.session import engine, Base
     async with engine.begin() as conn:
