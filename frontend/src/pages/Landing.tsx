@@ -21,6 +21,25 @@ const Landing: React.FC = () => {
       }
     };
     fetchMetrics();
+
+    // Connect to WebSocket for live updates
+    const wsUrl = import.meta.env.VITE_WS_URL || "ws://localhost:8000/api/v1/ws/dashboard";
+    const ws = new WebSocket(wsUrl);
+
+    ws.onmessage = (event) => {
+      try {
+        const data = JSON.parse(event.data);
+        if (data.type === "dashboard_update" && data.publicMetrics) {
+          setMetrics(data.publicMetrics);
+        }
+      } catch (e) {
+        console.error("Error parsing WS message", e);
+      }
+    };
+
+    return () => {
+      ws.close();
+    };
   }, []);
 
   return (

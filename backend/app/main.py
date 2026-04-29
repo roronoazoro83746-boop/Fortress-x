@@ -36,12 +36,19 @@ class RequestIDMiddleware(BaseHTTPMiddleware):
         )
         return response
 
+import asyncio
 from app.api.api_v1 import api_router
+from app.services.live_feed import live_feed_task
 
 app = FastAPI(
     title=settings.PROJECT_NAME,
     openapi_url=f"{settings.API_V1_STR}/openapi.json"
 )
+
+@app.on_event("startup")
+async def startup_event():
+    # Start the live feed task in the background
+    asyncio.create_task(live_feed_task())
 
 # Rate Limiting
 app.state.limiter = limiter

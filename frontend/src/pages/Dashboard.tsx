@@ -11,6 +11,7 @@ const Dashboard: React.FC = () => {
   const [metrics, setMetrics] = useState<any>(null);
   const [alerts, setAlerts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [wsConnected, setWsConnected] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -27,6 +28,38 @@ const Dashboard: React.FC = () => {
       }
     };
     fetchData();
+
+    // WebSocket Connection
+    const wsUrl = import.meta.env.VITE_WS_URL || "ws://localhost:8000/api/v1/ws/dashboard";
+    const ws = new WebSocket(wsUrl);
+
+    ws.onopen = () => {
+      console.log("WebSocket connected");
+      setWsConnected(true);
+    };
+
+    ws.onmessage = (event) => {
+      try {
+        const data = JSON.parse(event.data);
+        if (data.type === "dashboard_update") {
+          setMetrics(data.metrics);
+          if (data.alerts && data.alerts.length > 0) {
+            setAlerts(data.alerts);
+          }
+        }
+      } catch (e) {
+        console.error("Error parsing WS message", e);
+      }
+    };
+
+    ws.onclose = () => {
+      console.log("WebSocket disconnected");
+      setWsConnected(false);
+    };
+
+    return () => {
+      ws.close();
+    };
   }, []);
 
   if (loading || !metrics) {
@@ -46,8 +79,12 @@ const Dashboard: React.FC = () => {
         </h2>
         
         <div className="flex items-center gap-6">
-          <div className="text-sm text-gray-400 bg-[#110e1f] px-4 py-2 rounded-xl border border-white/5 flex items-center gap-2">
-            Live Monitoring <ChevronDown className="w-4 h-4" />
+          <div className={`text-sm ${wsConnected ? 'text-green-400' : 'text-gray-400'} bg-[#110e1f] px-4 py-2 rounded-xl border border-white/5 flex items-center gap-2 transition-colors`}>
+            {wsConnected ? (
+              <><span className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span> Live Stream Active</>
+            ) : (
+              <>Live Monitoring <ChevronDown className="w-4 h-4" /></>
+            )}
           </div>
           <div className="relative cursor-pointer">
             <Bell className="w-5 h-5 text-gray-400 hover:text-white transition-colors" />
