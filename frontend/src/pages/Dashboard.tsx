@@ -139,7 +139,7 @@ const Dashboard: React.FC = () => {
           </div>
           
           <div className="h-[300px] w-full min-w-0 flex-1">
-            <ResponsiveContainer width="100%" height="100%">
+            <ResponsiveContainer width="99%" minHeight={300}>
               <LineChart data={riskTrend} margin={{ top: 5, right: 20, bottom: 5, left: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#ffffff10" vertical={false} />
                 <XAxis dataKey="name" stroke="#6b7280" tick={{ fill: '#6b7280', fontSize: 12 }} axisLine={false} tickLine={false} dy={10} />
@@ -163,7 +163,7 @@ const Dashboard: React.FC = () => {
           
           <div className="flex-1 relative flex justify-center items-center min-w-0">
             <div className="h-[250px] w-full min-w-0">
-              <ResponsiveContainer width="100%" height="100%">
+              <ResponsiveContainer width="99%" minHeight={250}>
                 <PieChart>
                   <Pie
                     data={riskDistribution}
