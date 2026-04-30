@@ -50,7 +50,11 @@ from app.db.crud import init_db
 @app.on_event("startup")
 async def startup_event():
     # Initialize database tables
-    await init_db()
+    try:
+        await init_db()
+        logger.info("database_initialized")
+    except Exception as e:
+        logger.error("database_initialization_failed", error=str(e))
     # Start the live feed task in the background
     asyncio.create_task(live_feed_task())
 
