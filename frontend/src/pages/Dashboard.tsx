@@ -59,7 +59,11 @@ const Dashboard: React.FC = () => {
     };
 
     return () => {
-      ws.close();
+      if (ws.readyState === WebSocket.CONNECTING) {
+        ws.addEventListener('open', () => ws.close());
+      } else {
+        ws.close();
+      }
     };
   }, []);
 
@@ -134,7 +138,7 @@ const Dashboard: React.FC = () => {
             </div>
           </div>
           
-          <div className="h-[300px] w-full">
+          <div className="h-[300px] w-full min-w-0 flex-1">
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={riskTrend} margin={{ top: 5, right: 20, bottom: 5, left: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#ffffff10" vertical={false} />
@@ -157,8 +161,8 @@ const Dashboard: React.FC = () => {
             <h3 className="font-semibold text-lg">Risk Distribution</h3>
           </div>
           
-          <div className="flex-1 relative flex justify-center items-center">
-            <div className="h-[250px] w-full">
+          <div className="flex-1 relative flex justify-center items-center min-w-0">
+            <div className="h-[250px] w-full min-w-0">
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
                   <Pie
