@@ -61,16 +61,15 @@ const Sidebar: React.FC = () => {
       </nav>
       
       <div className="p-4 border-t border-white/5 mt-auto">
-        <div className="flex items-center gap-3 p-3 hover:bg-white/5 rounded-xl cursor-pointer transition-colors group">
-          <div className="w-8 h-8 rounded-full bg-gradient-to-r from-purple-500 to-blue-500 flex items-center justify-center text-white font-bold text-xs">
-            AU
-          </div>
-          <div className="flex-1">
-            <p className="text-sm font-medium text-white group-hover:text-purple-400 transition-colors">Admin User</p>
-            <p className="text-xs text-gray-500">Administrator</p>
-          </div>
-          <ChevronRight className="w-4 h-4 text-gray-500 group-hover:text-white transition-colors" />
-        </div>
+        <button 
+          onClick={() => {
+            localStorage.removeItem('fortress_token');
+            window.location.href = '/login';
+          }}
+          className="w-full flex items-center justify-center gap-3 p-3 hover:bg-red-500/10 rounded-xl cursor-pointer transition-colors group border border-transparent hover:border-red-500/20"
+        >
+          <span className="text-sm font-medium text-red-400 group-hover:text-red-300 transition-colors">Log Out</span>
+        </button>
       </div>
     </aside>
   );

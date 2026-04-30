@@ -1,10 +1,22 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route, Outlet, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Outlet, Navigate, useLocation } from 'react-router-dom';
 import Sidebar from './components/Sidebar';
 import Dashboard from './pages/Dashboard';
 import AlertDetails from './pages/AlertDetails';
 import Landing from './pages/Landing';
 import Login from './pages/Login';
+
+// Protected Route Guard
+const AuthGuard = ({ children }: { children: React.ReactNode }) => {
+  const token = localStorage.getItem('fortress_token');
+  const location = useLocation();
+
+  if (!token) {
+    return <Navigate to="/login" state={{ from: location }} replace />;
+  }
+
+  return <>{children}</>;
+};
 
 // Layout component for pages that need the sidebar (Dashboard, Alerts)
 const MainLayout = () => {
@@ -34,7 +46,7 @@ const App: React.FC = () => {
         <Route path="/login" element={<Login />} />
 
         {/* Protected Routes with Sidebar */}
-        <Route element={<MainLayout />}>
+        <Route element={<AuthGuard><MainLayout /></AuthGuard>}>
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/alerts/:id" element={<AlertDetails />} />
           

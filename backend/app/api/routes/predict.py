@@ -5,7 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.schemas.transaction import TransactionCreate, PredictionResponse, EngineTrace
 from app.services.fraud_orchestrator import fraud_orchestrator
-from app.core.security import validate_api_key, limiter
+from app.core.security import get_current_user, limiter
 from app.db.session import get_db
 from app.db import models
 from app.utils.persistence_worker import background_log_transaction
@@ -13,7 +13,7 @@ from app.utils.persistence_worker import background_log_transaction
 router = APIRouter()
 logger = structlog.get_logger()
 
-@router.post("/", response_model=PredictionResponse, dependencies=[Depends(validate_api_key)])
+@router.post("/", response_model=PredictionResponse, dependencies=[Depends(get_current_user)])
 @limiter.limit("10/minute")
 async def predict_fraud(
     request: Request, # Required by slowapi

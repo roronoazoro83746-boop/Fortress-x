@@ -10,6 +10,14 @@ class Decision(str, enum.Enum):
     REVIEW = "REVIEW"
     BLOCK = "BLOCK"
 
+class User(Base):
+    __tablename__ = "users"
+
+    id: Mapped[int] = mapped_column(primary_key=True, index=True)
+    email: Mapped[str] = mapped_column(String, unique=True, index=True)
+    hashed_password: Mapped[str] = mapped_column(String)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+
 class Transaction(Base):
     __tablename__ = "transactions"
 

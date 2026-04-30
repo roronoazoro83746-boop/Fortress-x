@@ -4,12 +4,12 @@ import structlog
 
 from app.db.session import get_db
 from app.db import crud
-from app.core.security import validate_api_key
+from app.core.security import get_current_user
 
 router = APIRouter()
 logger = structlog.get_logger()
 
-@router.get("/", dependencies=[Depends(validate_api_key)])
+@router.get("/", dependencies=[Depends(get_current_user)])
 async def get_metrics(db: AsyncSession = Depends(get_db)):
     """
     Retrieves aggregated metrics for the dashboard.

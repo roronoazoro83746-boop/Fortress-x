@@ -5,7 +5,15 @@
 
 const rawApiUrl = import.meta.env.VITE_API_URL || "http://localhost:8000/api/v1";
 export const API_BASE_URL = rawApiUrl.startsWith('http') ? rawApiUrl : `https://${rawApiUrl}`;
-const API_KEY = import.meta.env.VITE_API_KEY || "fortress-secret";
+
+export const getAuthToken = () => {
+  return localStorage.getItem('fortress_token');
+};
+
+const getHeaders = () => ({
+  "Content-Type": "application/json",
+  "Authorization": `Bearer ${getAuthToken()}`,
+});
 
 export interface TransactionData {
   user_id: string;
@@ -29,13 +37,48 @@ export interface PredictionResponse {
   timestamp: string;
 }
 
+export async function login(email: string, password: string) {
+  const response = await fetch(`${API_BASE_URL}/auth/login`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email, password }),
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(errorData.detail || "Login failed.");
+  }
+
+  const data = await response.json();
+  localStorage.setItem('fortress_token', data.access_token);
+  return data;
+}
+
+export async function signup(email: string, password: string) {
+  const response = await fetch(`${API_BASE_URL}/auth/signup`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email, password }),
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(errorData.detail || "Sign up failed.");
+  }
+
+  const data = await response.json();
+  localStorage.setItem('fortress_token', data.access_token);
+  return data;
+}
+
+export function logout() {
+  localStorage.removeItem('fortress_token');
+}
+
 export async function predictFraud(data: TransactionData): Promise<PredictionResponse> {
   const response = await fetch(`${API_BASE_URL}/predict/`, {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "x-api-key": API_KEY,
-    },
+    headers: getHeaders(),
     body: JSON.stringify(data),
   });
 
@@ -49,9 +92,7 @@ export async function predictFraud(data: TransactionData): Promise<PredictionRes
 
 export async function getDashboardMetrics() {
   const response = await fetch(`${API_BASE_URL}/metrics/`, {
-    headers: {
-      "x-api-key": API_KEY,
-    },
+    headers: getHeaders(),
   });
 
   if (!response.ok) {
@@ -73,9 +114,7 @@ export async function getPublicMetrics() {
 
 export async function getAlerts(skip = 0, limit = 100) {
   const response = await fetch(`${API_BASE_URL}/alerts/?skip=${skip}&limit=${limit}`, {
-    headers: {
-      "x-api-key": API_KEY,
-    },
+    headers: getHeaders(),
   });
 
   if (!response.ok) {
@@ -87,9 +126,7 @@ export async function getAlerts(skip = 0, limit = 100) {
 
 export async function getAlertDetails(id: string) {
   const response = await fetch(`${API_BASE_URL}/alerts/${id}`, {
-    headers: {
-      "x-api-key": API_KEY,
-    },
+    headers: getHeaders(),
   });
 
   if (!response.ok) {
