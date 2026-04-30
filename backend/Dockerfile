@@ -21,5 +21,5 @@ COPY . .
 # Expose the API port
 EXPOSE 8000
 
-# Start Gunicorn with Uvicorn workers for high performance
-CMD ["sh", "-c", "gunicorn -k uvicorn.workers.UvicornWorker app.main:app --bind 0.0.0.0:${PORT:-8000}"]
+# Start the application using the run.py script (handles dynamic PORT assignment cleanly)
+CMD ["python", "run.py"]
