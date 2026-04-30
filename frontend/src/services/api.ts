@@ -3,7 +3,8 @@
  * Handles communication with the FastAPI backend.
  */
 
-const rawApiUrl = import.meta.env.VITE_API_URL || "http://localhost:8000/api/v1";
+// Vercel should ideally provide VITE_API_URL, but we fallback to the active Render deployment
+const rawApiUrl = import.meta.env.VITE_API_URL || "https://fortress-x.onrender.com/api/v1";
 export const API_BASE_URL = rawApiUrl.startsWith('http') ? rawApiUrl : `https://${rawApiUrl}`;
 
 export const getAuthToken = () => {
