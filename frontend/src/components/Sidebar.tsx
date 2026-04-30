@@ -10,8 +10,7 @@ import {
   FileText, 
   UserCircle, 
   Settings,
-  Shield,
-  ChevronRight
+  Shield
 } from 'lucide-react';
 
 const Sidebar: React.FC = () => {
