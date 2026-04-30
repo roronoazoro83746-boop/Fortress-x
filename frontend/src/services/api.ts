@@ -11,10 +11,34 @@ export const getAuthToken = () => {
   return localStorage.getItem('fortress_token');
 };
 
-const getHeaders = () => ({
-  "Content-Type": "application/json",
-  "Authorization": `Bearer ${getAuthToken()}`,
-});
+const getHeaders = () => {
+  const headers: Record<string, string> = {
+    "Content-Type": "application/json",
+  };
+  const token = getAuthToken();
+  if (token) {
+    headers["Authorization"] = `Bearer ${token}`;
+  }
+  return headers;
+};
+
+async function fetchWithAuth(url: string, options: RequestInit = {}) {
+  const response = await fetch(url, {
+    ...options,
+    headers: {
+      ...getHeaders(),
+      ...options.headers,
+    },
+  });
+
+  if (response.status === 401) {
+    logout();
+    window.location.href = '/login';
+    throw new Error('Session expired. Please log in again.');
+  }
+
+  return response;
+}
 
 export interface TransactionData {
   user_id: string;
@@ -77,9 +101,8 @@ export function logout() {
 }
 
 export async function predictFraud(data: TransactionData): Promise<PredictionResponse> {
-  const response = await fetch(`${API_BASE_URL}/predict/`, {
+  const response = await fetchWithAuth(`${API_BASE_URL}/predict/`, {
     method: "POST",
-    headers: getHeaders(),
     body: JSON.stringify(data),
   });
 
@@ -92,9 +115,7 @@ export async function predictFraud(data: TransactionData): Promise<PredictionRes
 }
 
 export async function getDashboardMetrics() {
-  const response = await fetch(`${API_BASE_URL}/metrics/`, {
-    headers: getHeaders(),
-  });
+  const response = await fetch(`${API_BASE_URL}/metrics/`); // Public endpoint
 
   if (!response.ok) {
     throw new Error("Failed to fetch dashboard metrics");
@@ -114,9 +135,7 @@ export async function getPublicMetrics() {
 }
 
 export async function getAlerts(skip = 0, limit = 100) {
-  const response = await fetch(`${API_BASE_URL}/alerts/?skip=${skip}&limit=${limit}`, {
-    headers: getHeaders(),
-  });
+  const response = await fetchWithAuth(`${API_BASE_URL}/alerts/?skip=${skip}&limit=${limit}`);
 
   if (!response.ok) {
     throw new Error("Failed to fetch alerts");
@@ -126,9 +145,7 @@ export async function getAlerts(skip = 0, limit = 100) {
 }
 
 export async function getAlertDetails(id: string) {
-  const response = await fetch(`${API_BASE_URL}/alerts/${id}`, {
-    headers: getHeaders(),
-  });
+  const response = await fetchWithAuth(`${API_BASE_URL}/alerts/${id}`);
 
   if (!response.ok) {
     throw new Error("Failed to fetch alert details");
@@ -138,9 +155,7 @@ export async function getAlertDetails(id: string) {
 }
 
 export async function getTransactions(skip = 0, limit = 100) {
-  const response = await fetch(`${API_BASE_URL}/transactions/?skip=${skip}&limit=${limit}`, {
-    headers: getHeaders(),
-  });
+  const response = await fetchWithAuth(`${API_BASE_URL}/transactions/?skip=${skip}&limit=${limit}`);
 
   if (!response.ok) {
     throw new Error("Failed to fetch transactions");
@@ -150,9 +165,7 @@ export async function getTransactions(skip = 0, limit = 100) {
 }
 
 export async function getUsers(skip = 0, limit = 100) {
-  const response = await fetch(`${API_BASE_URL}/users/?skip=${skip}&limit=${limit}`, {
-    headers: getHeaders(),
-  });
+  const response = await fetchWithAuth(`${API_BASE_URL}/users/?skip=${skip}&limit=${limit}`);
 
   if (!response.ok) {
     throw new Error("Failed to fetch users");

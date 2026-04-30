@@ -9,7 +9,7 @@ from app.core.security import get_current_user
 router = APIRouter()
 logger = structlog.get_logger()
 
-@router.get("/", dependencies=[Depends(get_current_user)])
+@router.get("/")
 async def get_metrics(db: AsyncSession = Depends(get_db)):
     """
     Retrieves aggregated metrics for the dashboard.

@@ -7,8 +7,11 @@ from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
 from passlib.context import CryptContext
 import jwt
+import structlog
 
 from app.core.config import settings
+
+logger = structlog.get_logger()
 
 # Rate Limiting
 limiter = Limiter(key_func=get_remote_address)
@@ -50,9 +53,11 @@ async def get_current_user(credentials: HTTPAuthorizationCredentials = Security(
         payload = jwt.decode(token, settings.SECRET_KEY, algorithms=[ALGORITHM])
         email: str = payload.get("sub")
         if email is None:
+            logger.warning("auth_failed", reason="missing_sub_in_token")
             raise credentials_exception
         return payload
-    except jwt.PyJWTError:
+    except jwt.PyJWTError as e:
+        logger.warning("auth_failed", reason="jwt_decode_error", error=str(e))
         raise credentials_exception
 
 async def get_current_admin(current_user: dict = Depends(get_current_user)):
