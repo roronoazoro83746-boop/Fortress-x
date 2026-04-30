@@ -76,6 +76,15 @@ app.add_middleware(
 )
 
 # Routes
+import traceback
+from fastapi.responses import JSONResponse
+
+@app.exception_handler(Exception)
+async def global_exception_handler(request: Request, exc: Exception):
+    error_detail = traceback.format_exc()
+    logger.error("Unhandled Exception", error=error_detail)
+    return JSONResponse(status_code=500, content={"detail": str(exc), "traceback": error_detail})
+
 app.include_router(api_router, prefix=settings.API_V1_STR)
 
 @app.get("/health")
