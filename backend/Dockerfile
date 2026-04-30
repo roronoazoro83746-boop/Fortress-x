@@ -22,4 +22,4 @@ COPY . .
 EXPOSE 8000
 
 # Start Gunicorn with Uvicorn workers for high performance
-CMD ["gunicorn", "-k", "uvicorn.workers.UvicornWorker", "app.main:app", "--bind", "0.0.0.0:8000"]
+CMD ["sh", "-c", "gunicorn -k uvicorn.workers.UvicornWorker app.main:app --bind 0.0.0.0:${PORT:-8000}"]

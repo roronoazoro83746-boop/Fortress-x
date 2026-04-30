@@ -5,7 +5,7 @@ import {
 } from 'recharts';
 import { Bell, ChevronDown } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { getDashboardMetrics, getAlerts } from '../services/api';
+import { getDashboardMetrics, getAlerts, API_BASE_URL } from '../services/api';
 
 const Dashboard: React.FC = () => {
   const [metrics, setMetrics] = useState<any>(null);
@@ -30,7 +30,8 @@ const Dashboard: React.FC = () => {
     fetchData();
 
     // WebSocket Connection
-    const wsUrl = import.meta.env.VITE_WS_URL || "ws://localhost:8000/api/v1/ws/dashboard";
+    const wsBaseUrl = import.meta.env.VITE_WS_URL || API_BASE_URL.replace(/^http/, 'ws');
+    const wsUrl = `${wsBaseUrl}/ws/dashboard`;
     const ws = new WebSocket(wsUrl);
 
     ws.onopen = () => {
