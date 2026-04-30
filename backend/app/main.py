@@ -45,8 +45,12 @@ app = FastAPI(
     openapi_url=f"{settings.API_V1_STR}/openapi.json"
 )
 
+from app.db.crud import init_db
+
 @app.on_event("startup")
 async def startup_event():
+    # Initialize database tables
+    await init_db()
     # Start the live feed task in the background
     asyncio.create_task(live_feed_task())
 

@@ -10,6 +10,15 @@ class Settings(BaseSettings):
     # DATABASE
     SQLITE_URL: str = "sqlite+aiosqlite:///./fortressx.db"
     DATABASE_URL: str = SQLITE_URL
+
+    @field_validator("DATABASE_URL", mode="before")
+    @classmethod
+    def assemble_db_url(cls, v: str) -> str:
+        if v and v.startswith("postgres://"):
+            return v.replace("postgres://", "postgresql+asyncpg://", 1)
+        if v and v.startswith("postgresql://"):
+            return v.replace("postgresql://", "postgresql+asyncpg://", 1)
+        return v
     
     # SECURITY
     API_KEY: str = "fortress-secret"  # In prod, get from env
