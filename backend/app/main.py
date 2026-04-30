@@ -60,9 +60,12 @@ app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 # Middleware
 app.add_middleware(RequestIDMiddleware)
+origins = [str(origin) for origin in settings.CORS_ORIGINS] if settings.CORS_ORIGINS else ["https://fortress-x-nine.vercel.app"]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[str(origin) for origin in settings.CORS_ORIGINS] if settings.CORS_ORIGINS else ["http://localhost:5173", "http://127.0.0.1:5173", "http://localhost:3000", "https://fortress-x-nine.vercel.app"],
+    allow_origins=origins,
+    allow_origin_regex=r"https://.*\.vercel\.app",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

@@ -26,12 +26,19 @@ class Settings(BaseSettings):
 
     @field_validator("CORS_ORIGINS", mode="before")
     @classmethod
-    def assemble_cors_origins(cls, v: Union[str, List[str]]) -> Union[List[str], str]:
-        if isinstance(v, str) and not v.startswith("["):
-            return [i.strip() for i in v.split(",")]
-        elif isinstance(v, (list, str)):
-            return v
-        raise ValueError(v)
+    def assemble_cors_origins(cls, v: Union[str, List[str]]) -> List[str]:
+        import json
+        if isinstance(v, str):
+            try:
+                parsed = json.loads(v)
+                if isinstance(parsed, list):
+                    return [str(i) for i in parsed]
+            except json.JSONDecodeError:
+                pass
+            return [i.strip() for i in v.split(",") if i.strip()]
+        if isinstance(v, list):
+            return [str(i) for i in v]
+        return []
 
     # RISK ENGINE WEIGHTS
     ML_WEIGHT: float = 0.5
