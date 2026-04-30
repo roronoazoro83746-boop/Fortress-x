@@ -11,6 +11,11 @@ const Landing: React.FC = () => {
     avgRiskScore: 0
   });
 
+  const handleComingSoon = (e: React.MouseEvent) => {
+    e.preventDefault();
+    alert("This section is coming soon! For now, click 'Get Started' or 'Sign In' to see the working dashboard.");
+  };
+
   useEffect(() => {
     const fetchMetrics = async () => {
       try {
@@ -61,12 +66,12 @@ const Landing: React.FC = () => {
         </div>
 
         <div className="hidden lg:flex items-center gap-8 text-sm text-gray-300 font-medium">
-          <a href="#" className="hover:text-white transition-colors">Features</a>
-          <a href="#" className="hover:text-white transition-colors">How It Works</a>
-          <a href="#" className="hover:text-white transition-colors">Solutions</a>
-          <a href="#" className="hover:text-white transition-colors">Use Cases</a>
-          <a href="#" className="hover:text-white transition-colors">Pricing</a>
-          <a href="#" className="hover:text-white transition-colors">About Us</a>
+          <a href="#" onClick={handleComingSoon} className="hover:text-white transition-colors">Features</a>
+          <a href="#" onClick={handleComingSoon} className="hover:text-white transition-colors">How It Works</a>
+          <a href="#" onClick={handleComingSoon} className="hover:text-white transition-colors">Solutions</a>
+          <a href="#" onClick={handleComingSoon} className="hover:text-white transition-colors">Use Cases</a>
+          <a href="#" onClick={handleComingSoon} className="hover:text-white transition-colors">Pricing</a>
+          <a href="#" onClick={handleComingSoon} className="hover:text-white transition-colors">About Us</a>
         </div>
 
         <div className="flex items-center gap-4">
@@ -96,7 +101,7 @@ const Landing: React.FC = () => {
             <Link to="/dashboard" className="px-8 py-4 bg-purple-600 hover:bg-purple-500 transition-all rounded-xl text-base font-bold flex items-center gap-2 shadow-[0_0_30px_rgba(147,51,234,0.4)]">
               <Shield className="w-5 h-5" /> Get Started Now
             </Link>
-            <button className="px-8 py-4 border border-white/10 hover:bg-white/5 transition-all rounded-xl text-base font-bold flex items-center gap-2">
+            <button onClick={handleComingSoon} className="px-8 py-4 border border-white/10 hover:bg-white/5 transition-all rounded-xl text-base font-bold flex items-center gap-2">
               <Play className="w-5 h-5" /> Watch Demo
             </button>
           </div>
