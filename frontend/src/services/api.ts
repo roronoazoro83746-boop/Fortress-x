@@ -136,3 +136,38 @@ export async function getAlertDetails(id: string) {
 
   return response.json();
 }
+
+export async function getTransactions(skip = 0, limit = 100) {
+  const response = await fetch(`${API_BASE_URL}/transactions/?skip=${skip}&limit=${limit}`, {
+    headers: getHeaders(),
+  });
+
+  if (!response.ok) {
+    throw new Error("Failed to fetch transactions");
+  }
+
+  return response.json();
+}
+
+export async function getUsers(skip = 0, limit = 100) {
+  const response = await fetch(`${API_BASE_URL}/users/?skip=${skip}&limit=${limit}`, {
+    headers: getHeaders(),
+  });
+
+  if (!response.ok) {
+    throw new Error("Failed to fetch users");
+  }
+
+  return response.json();
+}
+
+export const getUserRole = (): string | null => {
+  const token = getAuthToken();
+  if (!token) return null;
+  try {
+    const payload = JSON.parse(atob(token.split('.')[1]));
+    return payload.role || 'analyst';
+  } catch (e) {
+    return null;
+  }
+};

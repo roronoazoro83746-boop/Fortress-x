@@ -37,6 +37,25 @@ const MainLayout = () => {
   );
 };
 
+import Transactions from './pages/Transactions';
+import Alerts from './pages/Alerts';
+import Users from './pages/Users';
+import Settings from './pages/Settings';
+import { RiskAnalysisView, BehaviorAnalyticsView, CyberIntelView, ReportsView } from './pages/PlaceholderViews';
+import { getUserRole } from './services/api';
+
+// Admin Route Guard
+const AdminGuard = ({ children }: { children: React.ReactNode }) => {
+  const role = getUserRole();
+  const location = useLocation();
+
+  if (role !== 'admin') {
+    return <Navigate to="/dashboard" state={{ from: location }} replace />;
+  }
+
+  return <>{children}</>;
+};
+
 const App: React.FC = () => {
   return (
     <Router>
@@ -48,7 +67,17 @@ const App: React.FC = () => {
         {/* Protected Routes with Sidebar */}
         <Route element={<AuthGuard><MainLayout /></AuthGuard>}>
           <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/transactions" element={<Transactions />} />
+          <Route path="/alerts" element={<Alerts />} />
           <Route path="/alerts/:id" element={<AlertDetails />} />
+          <Route path="/risk-analysis" element={<RiskAnalysisView />} />
+          <Route path="/behavior" element={<BehaviorAnalyticsView />} />
+          <Route path="/cyber-intel" element={<CyberIntelView />} />
+          <Route path="/reports" element={<ReportsView />} />
+          <Route path="/settings" element={<Settings />} />
+          
+          {/* Admin Only Route */}
+          <Route path="/users" element={<AdminGuard><Users /></AdminGuard>} />
           
           {/* Catch-all redirect for missing routes like /settings */}
           <Route path="*" element={<Navigate to="/dashboard" replace />} />

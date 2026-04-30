@@ -17,28 +17,22 @@ async def get_metrics(db: AsyncSession = Depends(get_db)):
     logger.info("get_metrics_requested")
     metrics = await crud.get_dashboard_metrics(db)
     
-    # We add some static chart data for now since we don't have historical series implemented
+    # Use real DB queries for charts
+    risk_trend = await crud.get_historical_risk_trend(db)
+    risk_dist = await crud.get_risk_distribution(db)
+    
+    # Count open alerts
+    from sqlalchemy import select, func
+    from app.db import models
+    active_alerts = await db.scalar(select(func.count(models.Alert.id)).where(models.Alert.status == "OPEN")) or 0
+
     return {
         "totalScans": metrics["total_transactions"],
         "fraudBlocked": metrics["fraud_detected"],
         "avgRiskScore": round(metrics["avg_risk_score"] * 100, 2), # Convert to percentage
-        "activeAlerts": 8, # placeholder
-        "riskTrend": [
-            {"name": "May 12", "total": 40000, "fraud": 10000},
-            {"name": "May 13", "total": 30000, "fraud": 8000},
-            {"name": "May 14", "total": 45000, "fraud": 12000},
-            {"name": "May 15", "total": 27800, "fraud": 9000},
-            {"name": "May 16", "total": 18900, "fraud": 4800},
-            {"name": "May 17", "total": 23900, "fraud": 3800},
-            {"name": "May 18", "total": 34900, "fraud": 4300},
-            {"name": "May 19", "total": 40000, "fraud": 15000},
-        ],
-        "riskDistribution": [
-            {"name": "Low Risk", "value": 72.1, "color": "#4ade80"},
-            {"name": "Medium Risk", "value": 18.7, "color": "#facc15"},
-            {"name": "High Risk", "value": 7.5, "color": "#f97316"},
-            {"name": "Critical Risk", "value": 1.7, "color": "#ef4444"},
-        ]
+        "activeAlerts": active_alerts,
+        "riskTrend": risk_trend,
+        "riskDistribution": risk_dist
     }
 
 @router.get("/public")

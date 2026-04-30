@@ -36,7 +36,8 @@ async def get_all_alerts(db: AsyncSession, skip: int = 0, limit: int = 100):
     return result.scalars().all()
 
 from sqlalchemy.orm import selectinload
-from sqlalchemy import func
+from sqlalchemy import func, case
+import calendar
 
 async def get_alert_with_details(db: AsyncSession, alert_id: int):
     result = await db.execute(
@@ -73,4 +74,78 @@ async def get_public_metrics(db: AsyncSession):
 async def init_db():
     from app.db.session import engine, Base
     async with engine.begin() as conn:
+        from sqlalchemy import text
+        try:
+            await conn.execute(text("ALTER TABLE users ADD COLUMN role VARCHAR DEFAULT 'analyst'"))
+        except Exception:
+            pass
         await conn.run_sync(Base.metadata.create_all)
+
+async def get_historical_risk_trend(db: AsyncSession):
+    stmt = (
+        select(
+            func.date(models.Transaction.timestamp).label("date"),
+            func.count(models.Transaction.id).label("total"),
+            func.sum(case((models.Score.decision.in_([models.Decision.BLOCK, models.Decision.REVIEW]), 1), else_=0)).label("fraud")
+        )
+        .outerjoin(models.Score)
+        .group_by(func.date(models.Transaction.timestamp))
+        .order_by(func.date(models.Transaction.timestamp).asc())
+        .limit(7)
+    )
+    result = await db.execute(stmt)
+    rows = result.all()
+    
+    trend = []
+    for row in rows:
+        d = row.date
+        if isinstance(d, str):
+            from datetime import datetime
+            try:
+                d = datetime.strptime(d, "%Y-%m-%d").date()
+            except Exception:
+                pass
+        name = f"{calendar.month_abbr[d.month]} {d.day}" if not isinstance(d, str) else d
+        trend.append({
+            "name": name,
+            "total": row.total or 0,
+            "fraud": row.fraud or 0
+        })
+    return trend
+
+async def get_risk_distribution(db: AsyncSession):
+    stmt = select(
+        func.sum(case((models.Score.final_score < 0.3, 1), else_=0)).label("low"),
+        func.sum(case((models.Score.final_score.between(0.3, 0.6), 1), else_=0)).label("medium"),
+        func.sum(case((models.Score.final_score.between(0.6, 0.8), 1), else_=0)).label("high"),
+        func.sum(case((models.Score.final_score >= 0.8, 1), else_=0)).label("critical"),
+        func.count(models.Score.id).label("total")
+    )
+    result = await db.execute(stmt)
+    row = result.first()
+    total = row.total if row and row.total and row.total > 0 else 1
+    return [
+        {"name": "Low Risk", "value": round(((row.low or 0) / total) * 100, 1), "color": "#4ade80"},
+        {"name": "Medium Risk", "value": round(((row.medium or 0) / total) * 100, 1), "color": "#facc15"},
+        {"name": "High Risk", "value": round(((row.high or 0) / total) * 100, 1), "color": "#f97316"},
+        {"name": "Critical Risk", "value": round(((row.critical or 0) / total) * 100, 1), "color": "#ef4444"},
+    ]
+
+async def get_all_transactions(db: AsyncSession, skip: int = 0, limit: int = 100):
+    result = await db.execute(
+        select(models.Transaction)
+        .options(selectinload(models.Transaction.score))
+        .order_by(models.Transaction.timestamp.desc())
+        .offset(skip)
+        .limit(limit)
+    )
+    return result.scalars().all()
+
+async def get_all_users(db: AsyncSession, skip: int = 0, limit: int = 100):
+    result = await db.execute(
+        select(models.User)
+        .order_by(models.User.created_at.desc())
+        .offset(skip)
+        .limit(limit)
+    )
+    return result.scalars().all()

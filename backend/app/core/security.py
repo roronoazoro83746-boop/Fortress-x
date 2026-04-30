@@ -44,13 +44,21 @@ async def get_current_user(credentials: HTTPAuthorizationCredentials = Security(
     
     # Check if they are using the old API Key to not break existing tests
     if token == settings.API_KEY:
-        return "api_key_user"
+        return {"sub": "api_key_user", "role": "admin"}
 
     try:
         payload = jwt.decode(token, settings.SECRET_KEY, algorithms=[ALGORITHM])
         email: str = payload.get("sub")
         if email is None:
             raise credentials_exception
-        return email
+        return payload
     except jwt.PyJWTError:
         raise credentials_exception
+
+async def get_current_admin(current_user: dict = Depends(get_current_user)):
+    if current_user.get("role") != "admin":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Not enough privileges"
+        )
+    return current_user

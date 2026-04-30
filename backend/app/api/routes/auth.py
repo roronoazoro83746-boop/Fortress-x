@@ -36,7 +36,7 @@ async def signup(user_in: UserCreate, db: AsyncSession = Depends(get_db)):
     await db.refresh(db_user)
     
     # Generate token
-    access_token = create_access_token(data={"sub": db_user.email})
+    access_token = create_access_token(data={"sub": db_user.email, "role": db_user.role})
     return {"access_token": access_token, "token_type": "bearer"}
 
 @router.post("/login", response_model=Token)
@@ -51,5 +51,5 @@ async def login(user_in: UserCreate, db: AsyncSession = Depends(get_db)):
             headers={"WWW-Authenticate": "Bearer"},
         )
         
-    access_token = create_access_token(data={"sub": user.email})
+    access_token = create_access_token(data={"sub": user.email, "role": user.role})
     return {"access_token": access_token, "token_type": "bearer"}
