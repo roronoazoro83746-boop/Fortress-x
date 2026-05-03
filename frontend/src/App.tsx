@@ -42,6 +42,8 @@ import Alerts from './pages/Alerts';
 import Users from './pages/Users';
 import Settings from './pages/Settings';
 import { RiskAnalysisView, BehaviorAnalyticsView, CyberIntelView, ReportsView } from './pages/PlaceholderViews';
+import LiveFeed from './pages/LiveFeed';
+import Sandbox from './pages/Sandbox';
 import { getUserRole } from './services/api';
 
 // Admin Route Guard
@@ -70,6 +72,8 @@ const App: React.FC = () => {
           <Route path="/transactions" element={<Transactions />} />
           <Route path="/alerts" element={<Alerts />} />
           <Route path="/alerts/:id" element={<AlertDetails />} />
+          <Route path="/live-feed" element={<LiveFeed />} />
+          <Route path="/sandbox" element={<Sandbox />} />
           <Route path="/risk-analysis" element={<RiskAnalysisView />} />
           <Route path="/behavior" element={<BehaviorAnalyticsView />} />
           <Route path="/cyber-intel" element={<CyberIntelView />} />

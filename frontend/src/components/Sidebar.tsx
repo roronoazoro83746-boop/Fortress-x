@@ -10,12 +10,16 @@ import {
   FileText, 
   UserCircle, 
   Settings,
-  Shield
+  Shield,
+  Terminal,
+  Cpu
 } from 'lucide-react';
 
 const Sidebar: React.FC = () => {
   const navItems = [
     { path: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
+    { path: '/live-feed', label: 'Live Feed', icon: Terminal },
+    { path: '/sandbox', label: 'Sandbox', icon: Cpu },
     { path: '/transactions', label: 'Transactions', icon: CreditCard },
     { path: '/alerts', label: 'Alerts', icon: BellRing },
     { path: '/risk-analysis', label: 'Risk Analysis', icon: Activity },
