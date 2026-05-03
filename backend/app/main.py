@@ -62,14 +62,19 @@ async def startup_event():
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
-# Middleware
-app.add_middleware(RequestIDMiddleware)
+# Middleware – ORDER MATTERS: last added = outermost in Starlette.
+# CORSMiddleware must be outermost to handle preflight OPTIONS before
+# BaseHTTPMiddleware subclasses (RequestIDMiddleware) can interfere.
 origins = [str(origin) for origin in settings.CORS_ORIGINS] if settings.CORS_ORIGINS else [
     "https://fortress-x-nine.vercel.app",
     "http://localhost:5173",
-    "http://localhost:3000"
+    "http://localhost:3000",
 ]
 
+# Add RequestIDMiddleware first (inner)
+app.add_middleware(RequestIDMiddleware)
+
+# Add CORSMiddleware last (outermost – processes first)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,
@@ -77,6 +82,7 @@ app.add_middleware(
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
+    expose_headers=["X-Request-ID", "X-Process-Time"],
 )
 
 # Routes
