@@ -14,7 +14,7 @@ router = APIRouter()
 logger = structlog.get_logger()
 
 @router.post("/", response_model=PredictionResponse, dependencies=[Depends(get_current_user)])
-@limiter.limit("10/minute")
+@limiter.limit("1000/minute")
 async def predict_fraud(
     request: Request, # Required by slowapi
     payload: TransactionCreate,
