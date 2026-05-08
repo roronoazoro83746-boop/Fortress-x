@@ -1,82 +1,69 @@
 import React from 'react';
-import { Activity, Globe, FileText, Lock } from 'lucide-react';
+import { motion } from 'framer-motion';
+import { Activity, Users, Globe, FileText, Database, Radar, Network, ShieldCheck } from 'lucide-react';
+import { CyberCard } from '../components/CyberCard';
 
-interface PlaceholderProps {
-  title: string;
-  description: string;
-  icon: 'risk' | 'cyber' | 'reports' | 'behavior';
-}
-
-const PlaceholderView: React.FC<PlaceholderProps> = ({ title, description, icon }) => {
-  const getIcon = () => {
-    switch (icon) {
-      case 'risk': return <Activity className="w-16 h-16 text-purple-500 mb-6" />;
-      case 'cyber': return <Globe className="w-16 h-16 text-blue-500 mb-6" />;
-      case 'reports': return <FileText className="w-16 h-16 text-green-500 mb-6" />;
-      case 'behavior': return <Lock className="w-16 h-16 text-red-500 mb-6" />;
-    }
-  };
-
-  return (
-    <div className="p-8 max-w-[1600px] mx-auto min-h-screen bg-[#070514] text-white flex flex-col font-sans">
-      <header className="mb-8">
-        <h2 className="text-2xl font-bold flex items-center gap-2">
-          <span className="w-1 h-6 bg-purple-500 rounded-full"></span>
+const FuturisticPlaceholder = ({ title, icon: Icon, description, subtitle }: any) => (
+  <div className="min-h-screen bg-[#05050b] text-white p-4 md:p-8 flex flex-col items-center">
+    <header className="w-full max-w-7xl mb-8 flex items-center gap-4 border-b border-cyan-900/30 pb-6 relative">
+      <div className="absolute bottom-0 left-0 w-32 h-[1px] bg-cyan-400 shadow-[0_0_10px_#22d3ee]"></div>
+      <div className="p-3 bg-cyan-900/20 rounded-xl border border-cyan-500/30 shadow-[0_0_15px_rgba(0,243,255,0.2)]">
+        <Icon className="w-6 h-6 text-cyan-400" />
+      </div>
+      <div>
+        <h2 className="text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-purple-400 tracking-widest uppercase">
           {title}
         </h2>
-      </header>
-
-      <div className="flex-1 flex flex-col items-center justify-center border border-white/5 bg-[#110e1f] rounded-2xl p-12 text-center relative overflow-hidden">
-        {/* Glow effect */}
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-purple-600/10 blur-[100px] pointer-events-none"></div>
-        
-        {getIcon()}
-        
-        <h3 className="text-3xl font-bold mb-4 bg-clip-text text-transparent bg-gradient-to-r from-purple-400 to-blue-400">
-          Module Under Development
-        </h3>
-        
-        <p className="text-gray-400 max-w-lg mb-8 text-lg">
-          {description}
+        <p className="text-xs font-mono text-gray-400 uppercase tracking-widest mt-1">
+          {subtitle}
         </p>
+      </div>
+    </header>
 
-        <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/5 border border-white/10 text-sm font-medium text-gray-300">
-          <span className="w-2 h-2 rounded-full bg-blue-500 animate-pulse"></span>
-          Estimated Release: Q4 2026
+    <div className="w-full max-w-7xl grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
+      {[1, 2, 3].map((i) => (
+        <CyberCard key={i} delay={0.1 * i} className="h-32 flex flex-col justify-between border-white/5 bg-[#0a0a14] relative overflow-hidden group">
+          <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/5 to-purple-500/5 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+          <div className="flex justify-between items-start">
+            <div className="w-1/2 h-2 bg-gray-800 rounded-full animate-pulse"></div>
+            <div className="w-6 h-6 rounded-md bg-gray-800 animate-pulse"></div>
+          </div>
+          <div className="w-3/4 h-8 bg-gray-800 rounded-md animate-pulse"></div>
+        </CyberCard>
+      ))}
+    </div>
+
+    <CyberCard delay={0.4} className="w-full max-w-7xl h-[500px] border-white/5 bg-[#0a0a14] flex flex-col items-center justify-center relative overflow-hidden">
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-cyan-900/10 via-transparent to-transparent"></div>
+      
+      <div className="relative flex flex-col items-center text-center z-10">
+        <div className="relative w-32 h-32 mb-8">
+          <svg className="absolute inset-0 w-full h-full animate-[spin_10s_linear_infinite]" viewBox="0 0 100 100">
+            <circle cx="50" cy="50" r="48" fill="none" stroke="#374151" strokeWidth="1" strokeDasharray="5 5" />
+          </svg>
+          <svg className="absolute inset-0 w-full h-full animate-[spin_15s_linear_infinite_reverse]" viewBox="0 0 100 100">
+            <circle cx="50" cy="50" r="38" fill="none" stroke="#4b5563" strokeWidth="1" strokeDasharray="10 20" />
+          </svg>
+          <div className="absolute inset-0 flex items-center justify-center">
+            <Database className="w-10 h-10 text-gray-600" />
+          </div>
+        </div>
+        
+        <h3 className="text-xl font-bold text-gray-300 tracking-widest uppercase mb-2">{description}</h3>
+        <p className="text-xs font-mono text-gray-500 max-w-md">
+          This neural module is currently under active development. Advanced ML capabilities and multi-vector threat visualization will be deployed in the upcoming v3.2 patch.
+        </p>
+        
+        <div className="mt-8 flex items-center gap-2 px-4 py-2 bg-black/40 border border-white/5 rounded-lg text-[10px] font-mono text-cyan-500">
+          <span className="w-2 h-2 rounded-full bg-cyan-500 animate-pulse"></span>
+          SYSTEM INDEXING
         </div>
       </div>
-    </div>
-  );
-};
-
-export const RiskAnalysisView = () => (
-  <PlaceholderView 
-    title="Risk Analysis" 
-    description="Advanced predictive risk modeling and historical threat vector analysis tools will be available in this module." 
-    icon="risk" 
-  />
+    </CyberCard>
+  </div>
 );
 
-export const BehaviorAnalyticsView = () => (
-  <PlaceholderView 
-    title="Behavior Analytics" 
-    description="Deep learning models tracking user interaction patterns to detect non-human or hijacked account behaviors." 
-    icon="behavior" 
-  />
-);
-
-export const CyberIntelView = () => (
-  <PlaceholderView 
-    title="Cyber Intelligence" 
-    description="Global threat maps, known malicious IP databases, and dark web credential leak integrations." 
-    icon="cyber" 
-  />
-);
-
-export const ReportsView = () => (
-  <PlaceholderView 
-    title="Reports & Compliance" 
-    description="Automated compliance report generation (SOC2, GDPR, PCI-DSS) and custom data export tools." 
-    icon="reports" 
-  />
-);
+export const RiskAnalysisView = () => <FuturisticPlaceholder title="Risk Analysis" subtitle="Predictive Threat Modeling" icon={Activity} description="Multi-Dimensional Risk Matrix" />;
+export const BehaviorAnalyticsView = () => <FuturisticPlaceholder title="Behavior Analytics" subtitle="User Pattern Recognition ML" icon={Users} description="Neural Behavioral Profiling" />;
+export const CyberIntelView = () => <FuturisticPlaceholder title="Cyber Intelligence" subtitle="Global Threat Actor Tracking" icon={Globe} description="Global Threat Feed Aggregation" />;
+export const ReportsView = () => <FuturisticPlaceholder title="System Reports" subtitle="Automated SOC Documentation" icon={FileText} description="Executive Intelligence Briefs" />;

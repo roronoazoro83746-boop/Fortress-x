@@ -34,6 +34,8 @@ async def get_latest_dashboard_data():
         
         # We also need the auth-metrics style for the Dashboard
         auth_metrics = await crud.get_dashboard_metrics(db)
+        risk_trend = await crud.get_historical_risk_trend(db)
+        risk_dist = await crud.get_risk_distribution(db)
         
         return {
             "type": "dashboard_update",
@@ -42,6 +44,8 @@ async def get_latest_dashboard_data():
                 "fraudBlocked": auth_metrics["fraud_detected"],
                 "avgRiskScore": round(auth_metrics["avg_risk_score"] * 100, 2),
                 "activeAlerts": len(alerts), # using recent alerts count as proxy
+                "riskTrend": risk_trend,
+                "riskDistribution": risk_dist
             },
             "publicMetrics": {
                 "transactionsAnalyzed": metrics["transactions_analyzed"],
