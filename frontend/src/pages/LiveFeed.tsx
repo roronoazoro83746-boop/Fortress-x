@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Terminal, Shield, AlertTriangle, Crosshair, MapPin, Cpu, Zap, Activity } from 'lucide-react';
+import { Terminal, Shield, AlertTriangle, Crosshair, MapPin, Cpu, Zap, Activity, Globe, X, ExternalLink } from 'lucide-react';
+import { getIpThreatIntel } from '../services/api';
 
 interface LogEntry {
   id: string;
@@ -18,7 +19,26 @@ const COUNTRIES = ['US', 'UK', 'RU', 'CN', 'BR', 'DE', 'JP', 'NG', 'IN', 'KR'];
 const LiveFeed: React.FC = () => {
   const [logs, setLogs] = useState<LogEntry[]>([]);
   const [isLive, setIsLive] = useState(true);
+  const [selectedIp, setSelectedIp] = useState<string | null>(null);
+  const [threatIntel, setThreatIntel] = useState<any>(null);
+  const [intelLoading, setIntelLoading] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
+
+  const handleIpClick = async (ip: string) => {
+    setSelectedIp(ip);
+    setThreatIntel(null);
+    setIntelLoading(true);
+    setIsLive(false); // Pause feed while inspecting
+    
+    try {
+      const intel = await getIpThreatIntel(ip);
+      setThreatIntel(intel);
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setIntelLoading(false);
+    }
+  };
 
   useEffect(() => {
     if (isLive && containerRef.current) {
@@ -165,8 +185,11 @@ const LiveFeed: React.FC = () => {
                     {log.country}
                   </div>
 
-                  <div className="w-32 shrink-0">
-                    {log.ip}
+                  <div 
+                    className="w-32 shrink-0 font-mono text-cyan-400 cursor-pointer hover:text-cyan-300 hover:underline flex items-center gap-1.5 transition-colors"
+                    onClick={() => handleIpClick(log.ip)}
+                  >
+                    {log.ip} <Globe className="w-3 h-3 opacity-70" />
                   </div>
 
                   <div className="w-32 shrink-0 text-gray-500">
@@ -208,6 +231,79 @@ const LiveFeed: React.FC = () => {
           )}
         </div>
       </div>
+
+      {/* Threat Intel Sidebar */}
+      <AnimatePresence>
+        {selectedIp && (
+          <motion.div
+            initial={{ opacity: 0, x: 350 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: 350 }}
+            transition={{ type: "spring", stiffness: 300, damping: 30 }}
+            className="absolute top-0 right-0 w-80 h-full bg-[#05050b] border-l border-cyan-900/40 shadow-[-20px_0_50px_rgba(0,0,0,0.8)] z-50 flex flex-col"
+          >
+            <div className="p-4 border-b border-white/10 flex items-center justify-between bg-black/40">
+              <div className="flex items-center gap-2">
+                <Globe className="w-5 h-5 text-cyan-400" />
+                <h3 className="font-mono text-sm tracking-widest text-cyan-400 uppercase font-bold">TinyFish Intel</h3>
+              </div>
+              <button onClick={() => setSelectedIp(null)} className="text-gray-500 hover:text-white transition-colors">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            
+            <div className="p-5 flex-1 overflow-y-auto custom-scrollbar">
+              <div className="mb-6">
+                <p className="text-[10px] text-gray-500 font-mono uppercase tracking-widest mb-1">Target Address</p>
+                <p className="text-xl font-mono text-white flex items-center gap-2">
+                  {selectedIp}
+                </p>
+              </div>
+              
+              {intelLoading ? (
+                <div className="flex flex-col items-center justify-center h-48 gap-4 text-cyan-500/70 border border-cyan-500/20 bg-cyan-950/10 rounded-xl">
+                  <Cpu className="w-8 h-8 animate-pulse" />
+                  <p className="text-xs font-mono uppercase tracking-widest">Querying Global Matrix</p>
+                </div>
+              ) : threatIntel ? (
+                <motion.div initial={{opacity:0}} animate={{opacity:1}} className="flex flex-col gap-4">
+                  <div className="p-4 rounded-xl border border-white/10 bg-white/5 flex items-center justify-between">
+                    <span className="text-[10px] font-mono text-gray-400 uppercase tracking-widest">Threat Mentions</span>
+                    <span className={`text-2xl font-mono font-black ${threatIntel.total_mentions > 0 ? 'text-red-400 drop-shadow-[0_0_8px_rgba(239,68,68,0.5)]' : 'text-green-400 drop-shadow-[0_0_8px_rgba(74,222,128,0.5)]'}`}>
+                      {threatIntel.total_mentions}
+                    </span>
+                  </div>
+                  
+                  {threatIntel.threat_intel && threatIntel.threat_intel.length > 0 ? (
+                    <div className="flex flex-col gap-3 mt-2">
+                      <h4 className="text-[10px] font-mono text-red-400 uppercase tracking-widest border-b border-red-500/20 pb-2 flex items-center gap-2">
+                        <AlertTriangle className="w-3 h-3" /> Web Findings
+                      </h4>
+                      {threatIntel.threat_intel.map((finding: any, idx: number) => (
+                        <div key={idx} className="bg-red-950/20 border border-red-500/30 p-3 rounded-lg flex flex-col gap-2 hover:bg-red-950/40 transition-colors">
+                          <p className="text-xs text-red-100 font-medium leading-tight">{finding.title}</p>
+                          <p className="text-[10px] text-red-300/70 line-clamp-3 leading-relaxed">{finding.snippet}</p>
+                          <div className="flex items-center justify-between mt-1 pt-2 border-t border-red-500/20">
+                            <span className="text-[9px] font-mono text-gray-500 uppercase">{finding.site || 'Source'}</span>
+                            <a href={finding.url} target="_blank" rel="noreferrer" className="text-[9px] font-mono text-cyan-400 hover:text-cyan-300 flex items-center gap-1 tracking-widest">
+                              OPEN <ExternalLink className="w-2.5 h-2.5" />
+                            </a>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="flex flex-col items-center justify-center h-40 gap-3 text-green-500/70 border border-green-500/20 bg-green-950/10 rounded-xl mt-4">
+                      <Shield className="w-8 h-8 opacity-50" />
+                      <p className="text-[10px] font-mono uppercase tracking-widest text-center leading-relaxed">No malicious<br/>activity detected</p>
+                    </div>
+                  )}
+                </motion.div>
+              ) : null}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };
